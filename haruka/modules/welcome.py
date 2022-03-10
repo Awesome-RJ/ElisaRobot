@@ -117,7 +117,7 @@ def new_member(bot: Bot, update: Update):
 
             else:
                 # If welcome message is media, send with appropriate function
-                if welc_type != sql.Types.TEXT and welc_type != sql.Types.BUTTON_TEXT:
+                if welc_type not in [sql.Types.TEXT, sql.Types.BUTTON_TEXT]:
                     reply = update.message.message_id
                     cleanserv = sql.clean_service(chat.id)
                     # Clean service welcome
@@ -135,10 +135,7 @@ def new_member(bot: Bot, update: Update):
                         fullname = first_name
                     count = chat.get_members_count()
                     mention = mention_html(new_mem.id, first_name)
-                    if new_mem.username:
-                        username = "@" + escape(new_mem.username)
-                    else:
-                        username = mention
+                    username = f"@{escape(new_mem.username)}" if new_mem.username else mention
                     formatted_text = cust_welcome.format(first=escape(first_name),
                                               last=escape(new_mem.last_name or first_name),
                                               fullname=escape(fullname), username=username, mention=mention,
@@ -197,11 +194,7 @@ def new_member(bot: Bot, update: Update):
                         fullname = first_name
                     count = chat.get_members_count()
                     mention = mention_html(new_mem.id, first_name)
-                    if new_mem.username:
-                        username = "@" + escape(new_mem.username)
-                    else:
-                        username = mention
-
+                    username = f"@{escape(new_mem.username)}" if new_mem.username else mention
                     valid_format = escape_invalid_curly_brackets(cust_welcome, VALID_WELCOME_FORMATTERS)
                     res = valid_format.format(first=escape(first_name),
                                               last=escape(new_mem.last_name or first_name),
@@ -252,8 +245,7 @@ def new_member(bot: Bot, update: Update):
                             sql.DEFAULT_WELCOME.format(first=first_name))  # type: Optional[Message]
 
 
-            prev_welc = sql.get_clean_pref(chat.id)
-            if prev_welc:
+            if prev_welc := sql.get_clean_pref(chat.id):
                 try:
                     bot.delete_message(chat.id, prev_welc)
                 except BadRequest as excp:
